@@ -1,4 +1,7 @@
 #include <dConsole.h>
+#include <PubSubClient.h>
+#include <Ticker.h>
+#include <EasyButton.h>
 
 #ifndef RED_GLOBALS_H
 #define RED_GLOBALS_H
@@ -26,37 +29,56 @@
 
  * ********************************************************************************
  */
-const char *version = "V1.3-PIO";
-
-dConsole console;
+#define VERSION "V1.3-PIO"
+#define MQTT_TOPIC_PREFIX "led" // prefix for all MQTT topics
 
 // configuration parameters
 // Hostname, AP name & MQTT clientID
-char myHostName[64];
 
 //define your default values here, if there are different values in config.json, they are overwritten.
-char deviceLocation[64] = "NEW";
-char mqttServer[64] = "MQTT";
-char mqttPort[16] = "1883";
-char mqttUser[64] = "";
-char mqttPwd[64] = "";
 
-
-// in console.ino
-void setupConsole();
-void handleConsole();
 
 // in WiFiConfigurations.ino
+extern char myHostName[];
+extern char deviceLocation[];
+extern char mqttServer[];
+extern char mqttPort[];
+extern char mqttUser[];
+extern char mqttPwd[];
 void configureESP(); // load configuration from FLASH & configure WIFI
 void checkConnection();   // check WIFI connection
 void writeConfigToDisk();
+void configureOTA(char *hostName);
+
+// in MQTT
+extern PubSubClient mqtt_client;
+extern char mqtt_topic[];
+extern char mqtt_temperature_topic[];
+extern char mqtt_outdoortemperature_topic[];
+extern char mqtt_doorbell_topic[];
+extern char mqtt_garagedoor_topic[];
+extern char mqtt_debug_topic[];
+extern char mqtt_debug_set_topic[];
+void configureMQTT();
+bool checkMQTTConnection();
+void mqttDisconnect();
+void mqttCallback(char *topic, byte *payload, unsigned int length);
+
+// in console.ino
+extern dConsole console;
+void setupConsole();
+void handleConsole();
 
 // in Sensors.ino
 void configSensors(long interval, void (*sensorCallback)(float insideTemp, float outsideTemp));
 void serviceSensors();
 
-// garage
+// in RedGarage
 void toggleGarageDoor();
-bool checkMQTTConnection();
+void doorBellButtonPressed();
+void updateTemperature(float temp, float outdoorTemp);
+void checkDoorBellButton();
+void turnOffGarageDoor();
+
 
 #endif

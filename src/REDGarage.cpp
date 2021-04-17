@@ -17,8 +17,10 @@
   It provides OTA functionality.
 
  *************************************************************************************/
+#include <Arduino.h>
+#include <pins.h>
 #include <RedGlobals.h>
-#include <MQTT.h>
+
 
 //for LED status
 Ticker ticker;
@@ -65,7 +67,7 @@ void setup() {
 
   //console.enableSerial(&Serial, true);
   console.print("[RED]Garage ");
-  console.println(version);
+  console.println(VERSION);
 
 
   // Configure WIFI

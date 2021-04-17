@@ -24,6 +24,16 @@
 #include <Pins.h>
 #include <RedGlobals.h>
 
+// configuration parameters
+// Hostname, AP name & MQTT clientID
+char myHostName[64];
+
+//define your default values here, if there are different values in config.json, they are overwritten.
+char deviceLocation[64] = "NEW";
+char mqttServer[64] = "MQTT";
+char mqttPort[16] = "1883";
+char mqttUser[64] = "";
+char mqttPwd[64] = "";
 
 //flag for saving data
 bool shouldSaveConfig = false;

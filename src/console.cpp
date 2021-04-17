@@ -3,8 +3,10 @@
 
  * ********************************************************************************
 */
-#include <RedGlobals.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
+#include <RedGlobals.h>
+
+dConsole console;
 
 void setupConsole()
 {
@@ -25,7 +27,7 @@ void handleConsole()
     if (strcmp(console.commandString, "?") == 0)
     {
       console.print("\n\n\n[RED]Garage ");
-      console.println(version);
+      console.println(VERSION);
       
       console.print(" IP address: ");
       console.println(WiFi.localIP().toString());
@@ -60,7 +62,7 @@ void handleConsole()
     {
       strcpy(mqttServer, console.parameterString);
       writeConfigToDisk();
-      mqtt_client.disconnect();
+      mqttDisconnect();
       console.print("MQTT server changed to ");
       console.println(mqttServer);
 

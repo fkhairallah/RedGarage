@@ -15,19 +15,52 @@
  * ********************************************************************************
 */
 #include <RedGlobals.h>
-#include <MQTT.h>
+
+
+
+WiFiClient espClient;
+PubSubClient mqtt_client(espClient);
+
+// mqtt client settings
+char mqtt_topic[64] = "garage/default";                         //contains current settings
+char mqtt_debug_topic[64] = "garage/default/debug";             //debug messages
+char mqtt_debug_set_topic[64] = "garage/default/debug/set";     //enable/disable debug messages
+
+char mqtt_temperature_topic[64] = "garage/default/temperature"; //temperature
+char mqtt_outdoortemperature_topic[64];                         //outdoor temperature
+char mqtt_doorbell_topic[64];                                   // doorbell switch
+char mqtt_garagedoor_topic[64];                                 // garage door open switch
+
+int secondsWithoutMQTT;
+
+// MQTT Settings
+// debug mode, when true, will send all packets received from the heatpump to topic mqtt_debug_topic
+// this can also be set by sending "on" to mqtt_debug_set_topic
+bool _debugMode = false;
+bool retain = true; //change to false to disable mqtt retain
+
+/*
+ * ********************************************************************************
+
+   Configure the MQTT server by:
+    - create all the topic using prefix/location/subtopic
+    - configure MQTT server and port and setup callback routine
+    - attempt a connection and log to debug topic if success
+
+ * ********************************************************************************
+*/
 
 void configureMQTT()
 {
   // configure the topics using location
   // heatpump/location/...
-  sprintf(mqtt_topic, "%s/%s", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_temperature_topic, "%s/%s/temperature", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_outdoortemperature_topic, "%s/%s/outdoortemperature", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_doorbell_topic, "%s/%s/doorbell", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_garagedoor_topic, "%s/%s/garagedoor", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_debug_topic, "%s/%s/debug", mqttTopicPrefix, deviceLocation);
-  sprintf(mqtt_debug_set_topic, "%s/%s/debug/set", mqttTopicPrefix, deviceLocation);
+  sprintf(mqtt_topic, "%s/%s", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_temperature_topic, "%s/%s/temperature", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_outdoortemperature_topic, "%s/%s/outdoortemperature", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_doorbell_topic, "%s/%s/doorbell", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_garagedoor_topic, "%s/%s/garagedoor", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_debug_topic, "%s/%s/debug", MQTT_TOPIC_PREFIX, deviceLocation);
+  sprintf(mqtt_debug_set_topic, "%s/%s/debug/set", MQTT_TOPIC_PREFIX, deviceLocation);
 
   // configure mqtt connection
   mqtt_client.setServer(mqttServer, atoi(mqttPort));
@@ -81,7 +114,7 @@ bool checkMQTTConnection() {
       console.println(mqtt_debug_set_topic);
       console.println("Connected to MQTT");
       char str[128];
-      sprintf(str, "Garage Device %s [%s] MQTT{%s,%s}  IP:%i.%i.%i.%i", version, deviceLocation, mqttServer, mqttPort, WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+      sprintf(str, "Garage Device %s [%s] MQTT{%s,%s}  IP:%i.%i.%i.%i", VERSION, deviceLocation, mqttServer, mqttPort, WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
       mqtt_client.publish(mqtt_debug_topic, str);
       secondsWithoutMQTT = 0;
       return true;
@@ -93,6 +126,11 @@ bool checkMQTTConnection() {
     }
   }
   return true;
+}
+
+void mqttDisconnect()
+{
+  mqtt_client.disconnect();
 }
 
 
