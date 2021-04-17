@@ -3,6 +3,10 @@
 #include <Ticker.h>
 #include <EasyButton.h>
 
+#ifndef _PINS_H
+#include <pins.h>
+#endif
+
 #ifndef RED_GLOBALS_H
 #define RED_GLOBALS_H
 
@@ -79,6 +83,8 @@ void doorBellButtonPressed();
 void updateTemperature(float temp, float outdoorTemp);
 void checkDoorBellButton();
 void turnOffGarageDoor();
-
+void ledON();
+void ledOFF();
+void tick();
 
 #endif

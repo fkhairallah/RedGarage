@@ -18,7 +18,6 @@
 
  *************************************************************************************/
 #include <Arduino.h>
-#include <pins.h>
 #include <RedGlobals.h>
 
 
@@ -32,6 +31,22 @@ Ticker doorBellDelay;
 Ticker garageDoorDelay;
 
 EasyButton doorBellButton(pgm_pin);
+
+/*
+ * ********************************************************************************
+
+ a few routines to drive the onboard blueLED
+
+ * ********************************************************************************
+*/
+void ledON()
+{
+  digitalWrite(blueLED, false);
+}
+void ledOFF()
+{
+  digitalWrite(blueLED, true);
+}
 
 void tick()
 {
