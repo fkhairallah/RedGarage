@@ -30,7 +30,7 @@ char myHostName[64];
 
 //define your default values here, if there are different values in config.json, they are overwritten.
 char deviceLocation[64] = "NEW";
-char mqttServer[64] = "MQTT";
+char mqttServer[64] = "192.168.1.2";
 char mqttPort[16] = "1883";
 char mqttUser[64] = "";
 char mqttPwd[64] = "";
@@ -47,14 +47,82 @@ Ticker wticker;
 // hold configurations as stored on disk
 DynamicJsonBuffer jsonBuffer;
 
+/*
+ * ********************************************************************************
+
+  ********************  CUSTOMIZABLE SECTION  ***************************
+
+ * ********************************************************************************
+*/
+
 // The extra parameters to be configured (can be either global or just in the setup)
 // After connecting, parameter.getValue() will get you the configured value
 // id/name placeholder/prompt default length
-WiFiManagerParameter custom_deviceLocation("location", "LED Location", deviceLocation, 64);
+WiFiManagerParameter custom_deviceLocation("location", "Device Location", deviceLocation, 64);
 WiFiManagerParameter custom_mqttServer("server", "mqtt server", mqttServer, 64);
 WiFiManagerParameter custom_mqttPort("port", "mqtt port", mqttPort, 16);
 WiFiManagerParameter custom_mqttUser("user", "mqtt user", mqttUser, 64);
 WiFiManagerParameter custom_mqttPwd("pwd", "mqtt password", mqttPwd, 64);
+
+// load parameters form JSON that was saved to disk
+void loadParametersfromJSON(JsonObject &json)
+{
+  //console.println("\nparsed json");
+  if (json["deviceLocation"].success())  strcpy(deviceLocation, json["deviceLocation"]);
+  if (json["mqttServer"].success())      strcpy(mqttServer, json["mqttServer"]);
+  if (json["mqttPort"].success())        strcpy(mqttPort, json["mqttPort"]);
+  if (json["mqttUser"].success())        strcpy(mqttUser, json["mqttUser"]);
+  if (json["mqttPwd"].success())        strcpy(mqttPwd, json["mqttPwd"]);
+}
+
+// save parameters to a JSON object so they can saved to disk
+JsonObject* saveParametersToJSON()
+{
+  JsonObject &json = jsonBuffer.createObject();
+  json["deviceLocation"] = deviceLocation;
+  json["mqttServer"] = mqttServer;
+  json["mqttPort"] = mqttPort;
+  json["mqttUser"] = mqttUser;
+  json["mqttPwd"] = mqttPwd;
+
+  return &json;
+}
+
+// load parameters into webserver custom data slots
+void loadParametersToWeb(WiFiManager* wfm)
+{
+
+  wfm->addParameter(&custom_deviceLocation);
+  wfm->addParameter(&custom_mqttServer);
+  wfm->addParameter(&custom_mqttPort);
+  wfm->addParameter(&custom_mqttUser);
+  wfm->addParameter(&custom_mqttPwd);
+}
+
+// this is called by the SUBMIT action of the webserver
+// it copies the server returned data into parameter locations
+void saveParametersFromWeb()
+{
+    //copy updated parameters into proper location
+    strcpy(deviceLocation, custom_deviceLocation.getValue());
+    strcpy(mqttServer, custom_mqttServer.getValue());
+    strcpy(mqttPort, custom_mqttPort.getValue());
+    strcpy(mqttUser, custom_mqttUser.getValue());
+    strcpy(mqttPwd, custom_mqttPwd.getValue());
+
+    console.println("Should save config");
+    shouldSaveConfig = true;
+  
+}
+
+
+/*
+ * ********************************************************************************
+
+    ********************  END OF CUSTOMIZABLE SECTION  ***************************
+
+ * ********************************************************************************
+*/
 
 /*
  * ********************************************************************************
@@ -132,18 +200,12 @@ void readConfigFromDisk()
 
         configFile.readBytes(buf.get(), size);
         JsonObject& json = jsonBuffer.parseObject(buf.get());
-        //json.printTo(Serial);
-        //console.println();
+
         if (json.success()) 
         {
-          //console.println("\nparsed json");
-          if (json["deviceLocation"].success()) strcpy(deviceLocation, json["deviceLocation"]);
-          if (json["mqttServer"].success()) strcpy(mqttServer, json["mqttServer"]);
-          if (json["mqttPort"].success()) strcpy(mqttPort, json["mqttPort"]);
-          if (json["mqttUser"].success()) strcpy(mqttUser, json["mqttUser"]);
-          if (json["mqttPwd"].success()) strcpy(mqttPwd, json["mqttPwd"]);
-
-        } else 
+          loadParametersfromJSON(json);
+        } 
+        else 
         {
           console.println("failed to load json config");
         }
@@ -168,26 +230,19 @@ void readConfigFromDisk()
 */
 void writeConfigToDisk()
 {
-  console.println("saving config");
 
-  JsonObject& json = jsonBuffer.createObject();
-  json["deviceLocation"] = deviceLocation;
-  json["mqttServer"] = mqttServer;
-  json["mqttPort"] = mqttPort;
-  json["mqttUser"] = mqttUser;
-  json["mqttPwd"] = mqttPwd;
-  
 
   File configFile = LittleFS.open("/config.json", "w");
   if (!configFile) {
     console.println("failed to open config file for writing");
   }
-
-  //json.printTo(Serial);
-  json.printTo(configFile);
-  configFile.close();
-  //end save
-
+  else
+  {
+    JsonObject *json = saveParametersToJSON();
+    json->printTo(configFile);
+    configFile.close();
+    console.println("config saved to disk");
+  }
 }
 
 
@@ -225,28 +280,14 @@ void configureESP()
   });
 
   //set config save notify callback
-  wifiManager.setSaveConfigCallback([] {
-    //copy updated parameters into proper location
-    strcpy(deviceLocation, custom_deviceLocation.getValue());
-    strcpy(mqttServer, custom_mqttServer.getValue());
-    strcpy(mqttPort, custom_mqttPort.getValue());
-    strcpy(mqttUser, custom_mqttUser.getValue());
-    strcpy(mqttPwd, custom_mqttPwd.getValue());
-
-    console.println("Should save config");
-    shouldSaveConfig = true;
-  });
+  wifiManager.setSaveConfigCallback(saveParametersFromWeb);
 
   //set static ip
   //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
 
   //add all your parameters here
-  wifiManager.addParameter(&custom_deviceLocation);
-  wifiManager.addParameter(&custom_mqttServer);
-  wifiManager.addParameter(&custom_mqttPort);
-  wifiManager.addParameter(&custom_mqttUser);
-  wifiManager.addParameter(&custom_mqttPwd);
-  
+  loadParametersToWeb(&wifiManager);
+
   //reset settings - for testing
   //wifiManager.resetSettings();
 
@@ -258,7 +299,7 @@ void configureESP()
   //useful to make it all retry or go to sleep
   wifiManager.setTimeout(120);
 
-  sprintf(myHostName, "led-%s", deviceLocation);
+  sprintf(myHostName, "%s-%s", MQTT_TOPIC_PREFIX, deviceLocation);
   console.print("Hostname: ");
   console.println(myHostName);
 
@@ -276,7 +317,7 @@ void configureESP()
     delay(5000);
   }
 
-
+  console.println("Connected to: " + WiFi.SSID());
 
   //if you get here you have connected to the WiFi
   //console.println("connected...yeey :)");

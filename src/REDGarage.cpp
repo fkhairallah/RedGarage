@@ -75,27 +75,16 @@ void setup() {
 
   digitalWrite(blueLED, LOW);
   console.enableTelnet(23);
-  //console.enableUDP(WiFi.localIP(), 10110);
   console.print("Telnet Enabled on ");
   console.println(WiFi.localIP().toString());
 
+  // configure MQTT topics & connect
   configureMQTT();
 
 
   // configure temp sensor
   configSensors(_TEMP_SENSOR_PERIOD, &updateTemperature);
 
-#ifdef DISPLAY_PRESENT
-  // switch UART pins to digital mode so they can be used by the display
-  console.disableSerial();
-  pinMode(SCL_pin, FUNCTION_3);
-  pinMode(SDA_pin, FUNCTION_3);
-  pinMode(SCL_pin, OUTPUT);
-  pinMode(SDA_pin, OUTPUT);
-
-  configureDisplay();
-  displayStatus();
-#endif
 }
 
 
@@ -110,22 +99,13 @@ void loop() {
 
   checkConnection();  // check WIFI connection
 
-  // service temperature and other sensos
-  serviceSensors();
+  serviceSensors(); // service temperature and other sensos
 
-  // service the buttons
-  doorBellButton.read();
-
-#ifdef DISPLAY_PRESENT
-  // service display taking care of diming it and turning it off after _DISPLAY_INTERVAL
-  serviceDisplay();
-#endif
+  doorBellButton.read(); // service the buttons
 
   checkMQTTConnection();  // check MQTT
 
-
-  // handle any commands from console
-  handleConsole();
+  handleConsole(); // handle any commands from console
 
 }
 
@@ -174,11 +154,23 @@ void updateTemperature(float temp, float outdoorTemp)
 {
   char str[128];
   console.println("Reporting temp reading (in/out) of " + String(temp) + " and " + String(outdoorTemp));
-  sprintf(str, "%.1f", temp);
-  mqtt_client.publish(mqtt_temperature_topic, str);
-  sprintf(str, "%.1f", outdoorTemp);
-  mqtt_client.publish(mqtt_outdoortemperature_topic, str);
+  if (temp > -100)
+  {
+    sprintf(str, "%.1f", temp);
+    mqtt_client.publish(mqtt_temperature_topic, str);
+  }
+  if (outdoorTemp > -100)
+  {
+    sprintf(str, "%.1f", outdoorTemp);
+    mqtt_client.publish(mqtt_outdoortemperature_topic, str);
+  }
 
+  // we have
+  if ( (temp <= -100) || (outdoorTemp <= -100) ) 
+  {
+    sprintf(str,"Sensor Error: #1 = %.1f #2 = %.1f",temp, outdoorTemp);
+    mqtt_client.publish(mqtt_debug_topic,str);
+  }
 
   tick();
 

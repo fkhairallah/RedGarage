@@ -29,8 +29,8 @@
 
  * ********************************************************************************
  */
-#define VERSION "V1.3-PIO"
-#define MQTT_TOPIC_PREFIX "led" // prefix for all MQTT topics
+#define VERSION "V1.2-PIO"
+#define MQTT_TOPIC_PREFIX "garage" // prefix for all MQTT topics
 
 // configuration parameters
 // Hostname, AP name & MQTT clientID
