@@ -88,9 +88,7 @@ void setup() {
   // Configure WIFI
   configureESP(); // load configuration from FLASH & configure WIFI
 
-  digitalWrite(blueLED, LOW);
-  console.enableTelnet(23);
-  console.print("Telnet Enabled on ");
+  console.print("Connected on ");
   console.println(WiFi.localIP().toString());
 
   // configure MQTT topics & connect
