@@ -1,16 +1,19 @@
-/*
- * ********************************************************************************
-
- This file manages the top-level WIFI and board configuration for [Red] based projects
- 
- - Factory-fresh or unable to connect to WIFI it fires up a hotspot and a web server and allows the user to
-    configure device parameters
-
- - If a WIFI configuration exists, it connects then reads the configuration from config.json
-   and proceeds.
-
- * ********************************************************************************
-*/
+/**********************************************************************************
+ * 
+ * Converted to work with ArdionJSON V6 
+ * 
+ **********************************************************************************
+ *
+ * This file manages the top-level WIFI and board configuration 
+ * for [Red] based projects:
+ * 
+ * - Factory-fresh or unable to connect to WIFI it fires up a hotspot and a 
+ *    web server and allows the user to configure device parameters
+ * 
+ * - If a WIFI configuration exists, it connects then reads the configuration 
+ *    from config.json and proceeds.
+ * 
+ *********************************************************************************/
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <DNSServer.h>
 #include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
@@ -27,13 +30,6 @@
 // Hostname, AP name & MQTT clientID
 char myHostName[64];
 
-//define your default values here, if there are different values in config.json, they are overwritten.
-char deviceLocation[64] = "NEW";
-char mqttServer[64] = "192.168.1.2";
-char mqttPort[16] = "1883";
-char mqttUser[64] = "";
-char mqttPwd[64] = "";
-
 //flag for saving data
 bool shouldSaveConfig = false;
 int secondsWithoutWIFI;
@@ -43,8 +39,6 @@ bool otaInProgress; // flags if OTA is in progress
 //for LED status
 Ticker wticker;
 
-// hold configurations as stored on disk
-DynamicJsonBuffer jsonBuffer;
 
 /*
  * ********************************************************************************
@@ -53,6 +47,13 @@ DynamicJsonBuffer jsonBuffer;
 
  * ********************************************************************************
 */
+
+//define your default values here, if there are different values in config.json, they are overwritten.
+char deviceLocation[64] = "NEW";
+char mqttServer[64] = "RyeManorPi.local";
+char mqttPort[16] = "1883";
+char mqttUser[64] = "";
+char mqttPwd[64] = "";
 
 // The extra parameters to be configured (can be either global or just in the setup)
 // After connecting, parameter.getValue() will get you the configured value
@@ -64,38 +65,42 @@ WiFiManagerParameter custom_mqttUser("user", "mqtt user", mqttUser, 64);
 WiFiManagerParameter custom_mqttPwd("pwd", "mqtt password", mqttPwd, 64);
 
 // load parameters form JSON that was saved to disk
-void loadParametersfromJSON(JsonObject &json)
+void loadParametersfromJSON(DynamicJsonDocument json)
 {
-  //console.println("\nparsed json");
-  if (json["deviceLocation"].success())  strcpy(deviceLocation, json["deviceLocation"]);
-  if (json["mqttServer"].success())      strcpy(mqttServer, json["mqttServer"]);
-  if (json["mqttPort"].success())        strcpy(mqttPort, json["mqttPort"]);
-  if (json["mqttUser"].success())        strcpy(mqttUser, json["mqttUser"]);
-  if (json["mqttPwd"].success())        strcpy(mqttPwd, json["mqttPwd"]);
+  /* common */
+  if (json.containsKey("deviceLocation"))  strcpy(deviceLocation, json["deviceLocation"]);
+  if (json.containsKey("mqttServer"))      strcpy(mqttServer, json["mqttServer"]);
+  if (json.containsKey("mqttPort"))        strcpy(mqttPort, json["mqttPort"]);
+  if (json.containsKey("mqttUser"))        strcpy(mqttUser, json["mqttUser"]);
+  if (json.containsKey("mqttPwd"))        strcpy(mqttPwd, json["mqttPwd"]);
+
 }
 
 // save parameters to a JSON object so they can saved to disk
-JsonObject* saveParametersToJSON()
+DynamicJsonDocument saveParametersToJSON()
 {
-  JsonObject &json = jsonBuffer.createObject();
+  DynamicJsonDocument json(200);
+  /* common */
   json["deviceLocation"] = deviceLocation;
   json["mqttServer"] = mqttServer;
   json["mqttPort"] = mqttPort;
   json["mqttUser"] = mqttUser;
   json["mqttPwd"] = mqttPwd;
 
-  return &json;
+  return json;
 }
 
 // load parameters into webserver custom data slots
 void loadParametersToWeb(WiFiManager* wfm)
 {
-
+  /* common */
   wfm->addParameter(&custom_deviceLocation);
   wfm->addParameter(&custom_mqttServer);
   wfm->addParameter(&custom_mqttPort);
   wfm->addParameter(&custom_mqttUser);
   wfm->addParameter(&custom_mqttPwd);
+
+  /* custom */
 }
 
 // this is called by the SUBMIT action of the webserver
@@ -136,6 +141,11 @@ void wtick()
   //toggle state
   int state = digitalRead(blueLED);  // get the current state of GPIO1 pin
   digitalWrite(blueLED, !state);     // set pin to the opposite state
+}
+
+void tickOFF()
+{
+  digitalWrite(blueLED,HIGH);
 }
 
 
@@ -198,12 +208,12 @@ void readConfigFromDisk()
         std::unique_ptr<char[]> buf(new char[size]);
 
         configFile.readBytes(buf.get(), size);
-        JsonObject& json = jsonBuffer.parseObject(buf.get());
-
-        if (json.success()) 
+        DynamicJsonDocument json(200);
+        auto error = deserializeJson(json, buf.get());
+        if (!error)
         {
           loadParametersfromJSON(json);
-        } 
+        }
         else 
         {
           console.println("failed to load json config");
@@ -237,8 +247,8 @@ void writeConfigToDisk()
   }
   else
   {
-    JsonObject *json = saveParametersToJSON();
-    json->printTo(configFile);
+    DynamicJsonDocument json = saveParametersToJSON();
+    serializeJson(json,configFile);
     configFile.close();
     console.println("config saved to disk");
   }
@@ -322,6 +332,8 @@ void configureESP()
   //console.println("connected...yeey :)");
   secondsWithoutWIFI = 0;
   wticker.detach();
+  tickOFF();
+  
 
   // configure mDNS so we can reach it via .local (sometimes)
   if (!MDNS.begin(myHostName)) {

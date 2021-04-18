@@ -21,19 +21,7 @@
 #define _DISPLAY_INTERVAL 5000    // in ms how long before the display is dimmed then turned off
 #define GARAGEDOOR_MOVE_TIME 20   // twice (2x) the time it take the garage door to open (in seconds)
 
-/*********************************************************************************
- * 
-
-  Hardware configuration:
-
-12/18/20 V1.0 -- Initial release
-12/23/20 V1.1 -- Added controls on moving garage door
-4/16/21 V1.2PIO -- Moved to Platform IO
-
-
- * ********************************************************************************
- */
-#define VERSION "V1.2-PIO"
+#define VERSION "V1.3"         // N.B: document changes in README.md
 #define MQTT_TOPIC_PREFIX "garage" // prefix for all MQTT topics
 
 // configuration parameters
