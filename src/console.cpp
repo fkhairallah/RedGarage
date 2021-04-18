@@ -11,7 +11,7 @@ dConsole console;
 void setupConsole()
 {
   console.enableSerial(&Serial, true);
-  //console.enableTelnet(23);
+  console.enableTelnet(23);
   
 }
 
