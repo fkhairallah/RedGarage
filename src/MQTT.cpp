@@ -103,7 +103,7 @@ bool checkMQTTConnection() {
     mqtt_client.setServer(mqttServer, atoi(mqttPort) );
 
     // Attempt to connect
-    if (mqtt_client.connect("garage"))
+    if (mqtt_client.connect(myHostName))
     {
       // once connected -- make sure the bell & garage door trigger are off
       // then subscribe to the necessary topics
@@ -111,10 +111,9 @@ bool checkMQTTConnection() {
       mqtt_client.publish(mqtt_garagedoor_topic, "OFF");
       mqtt_client.subscribe(mqtt_garagedoor_topic);
       mqtt_client.subscribe(mqtt_debug_set_topic);
-      console.println(mqtt_debug_set_topic);
       console.println("Connected to MQTT");
       char str[128];
-      sprintf(str, "Garage Device %s [%s] MQTT{%s,%s}  IP:%i.%i.%i.%i", VERSION, deviceLocation, mqttServer, mqttPort, WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+      sprintf(str, "%s %s [%s] MQTT{%s,%s}  IP:%i.%i.%i.%i", MQTT_TOPIC_PREFIX, VERSION, deviceLocation, mqttServer, mqttPort, WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
       mqtt_client.publish(mqtt_debug_topic, str);
       secondsWithoutMQTT = 0;
       return true;
