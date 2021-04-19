@@ -38,6 +38,12 @@ bool otaInProgress; // flags if OTA is in progress
 //for LED status
 Ticker wticker;
 
+//define your default values here, if there are different values in config.json, they are overwritten.
+char deviceLocation[64] = "NEW";
+char mqttServer[64] = "RyeManorPi.local";
+char mqttPort[16] = "1883";
+char mqttUser[64] = "";
+char mqttPwd[64] = "";
 
 /*
  * ********************************************************************************
@@ -47,12 +53,6 @@ Ticker wticker;
  * ********************************************************************************
 */
 
-//define your default values here, if there are different values in config.json, they are overwritten.
-char deviceLocation[64] = "NEW";
-char mqttServer[64] = "RyeManorPi.local";
-char mqttPort[16] = "1883";
-char mqttUser[64] = "";
-char mqttPwd[64] = "";
 
 // The extra parameters to be configured (can be either global or just in the setup)
 // After connecting, parameter.getValue() will get you the configured value
@@ -78,6 +78,7 @@ void loadParametersfromJSON(DynamicJsonDocument json)
 // save parameters to a JSON object so they can saved to disk
 DynamicJsonDocument saveParametersToJSON()
 {
+  //JsonObject &json = jsonBuffer.createObject();
   DynamicJsonDocument json(200);
   /* common */
   json["deviceLocation"] = deviceLocation;

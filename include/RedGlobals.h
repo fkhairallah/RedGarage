@@ -30,7 +30,7 @@
 //define your default values here, if there are different values in config.json, they are overwritten.
 
 
-// in WiFiConfigurations.ino
+// in WiFiConfig
 extern char myHostName[];
 extern char deviceLocation[];
 extern char mqttServer[];
@@ -42,7 +42,8 @@ void checkConnection();   // check WIFI connection
 void writeConfigToDisk();
 void configureOTA(char *hostName);
 
-// in MQTT
+// in MQTTConfig
+extern bool debugMode;
 extern PubSubClient mqtt_client;
 extern char mqtt_topic[];
 extern char mqtt_temperature_topic[];
