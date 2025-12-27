@@ -8,7 +8,7 @@ as well as inside and outside temperature reporting
 ## Version 1.0
   V1.03 was development in the Arduino IDE in 2018
 
-## Version 1.2PIO
+## Version 1.2 PIO
   Direct port to Platform.IO and conversion to C++ while still retaining the original JSON Library
   
 ## Version 1.3
@@ -23,6 +23,8 @@ as well as inside and outside temperature reporting
   if the main WIFI fails.
 
 
+# D1 Mini Pinout
+https://user-images.githubusercontent.com/130336548/230941271-0813e745-0617-4bff-ae6b-c98254c5e8ba.jpg
 
 # Hardware Notes
 

@@ -20,7 +20,6 @@
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
-#include <Ticker.h>
 #include <LittleFS.h>
 
 #include <RedGlobals.h>
@@ -304,6 +303,7 @@ void writeConfigToDisk()
 void configureESP()
 {
 
+
   readConfigFromDisk();
 
 
@@ -392,6 +392,7 @@ void configureESP()
 
   //if the portal changed the parameters then save the custom parameters to FS
   if (shouldSaveConfig)  writeConfigToDisk();
+
 
 
 }

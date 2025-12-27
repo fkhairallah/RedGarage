@@ -24,9 +24,6 @@
 float currentTemp = -100.0;
 float currentOutdoorTemp = -100.0;
 
-//for LED status
-Ticker ticker;
-
 // for Button callback
 Ticker doorBellDelay;
 
@@ -35,28 +32,6 @@ Ticker garageDoorDelay;
 
 EasyButton doorBellButton(pgm_pin);
 
-/*
- * ********************************************************************************
-
- a few routines to drive the onboard blueLED
-
- * ********************************************************************************
-*/
-void ledON()
-{
-  digitalWrite(blueLED, false);
-}
-void ledOFF()
-{
-  digitalWrite(blueLED, true);
-}
-
-void tick()
-{
-  //toggle state
-  int state = digitalRead(blueLED); // get the current state of GPIO1 pin
-  digitalWrite(blueLED, !state);    // set pin to the opposite state
-}
 
 /*
  * ********************************************************************************
@@ -78,9 +53,7 @@ void setup() {
   //doorBellButton.begin();
   //doorBellButton.onPressed(doorBellButtonPressed);
   
-  // start ticker with 0.5 because we start in AP mode and try to connect
-  ticker.attach(0.6, tick);
-
+  
   setupConsole();
 
   //console.enableSerial(&Serial, true);
@@ -103,6 +76,7 @@ void setup() {
 
   // start web server
   startWebServer();
+
 
 }
 
@@ -127,6 +101,7 @@ void loop() {
   handleWebServer(); // handle web server requests
 
   handleConsole(); // handle any commands from console
+
 
 }
 
@@ -196,8 +171,6 @@ void updateTemperature(float temp, float outdoorTemp)
     sprintf(str,"Sensor Error: #1 = %.1f #2 = %.1f",temp, outdoorTemp);
     mqtt_client.publish(mqtt_debug_topic,str);
   }
-
-  tick();
 
 }
 
