@@ -78,6 +78,7 @@ void handleConsole()
       //reset settings - for testing
       WiFiManager wifiManager;
       wifiManager.resetSettings();
+      eraseAllConfig();
       console.println(" Done.");
     }
     if (strcmp(console.commandString, "reboot") == 0)

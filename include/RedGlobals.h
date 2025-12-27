@@ -21,7 +21,7 @@
 #define _DISPLAY_INTERVAL 5000    // in ms how long before the display is dimmed then turned off
 #define GARAGEDOOR_MOVE_TIME 20   // twice (2x) the time it take the garage door to open (in seconds)
 
-#define VERSION "V1.3"         // N.B: document changes in README.md
+#define VERSION "V1.5"         // N.B: document changes in README.md
 #define MQTT_TOPIC_PREFIX "garage" // prefix for all MQTT topics
 
 // configuration parameters
@@ -41,6 +41,26 @@ void configureESP(); // load configuration from FLASH & configure WIFI
 void checkConnection();   // check WIFI connection
 void writeConfigToDisk();
 void configureOTA(char *hostName);
+void eraseAllConfig();    // factory reset of all configuration
+
+// in webserver
+#ifndef WEBSERVER_H
+#define WEBSERVER_H
+
+#include <ESP8266WebServer.h>
+
+    // Declare global temperature variables (defined in REDGarage.cpp)
+    extern float currentTemp;
+extern float currentOutdoorTemp;
+
+// Declare garage door function (defined in REDGarage.cpp)
+extern void toggleGarageDoor();
+
+// Web server functions
+void startWebServer();
+void handleWebServer();
+
+#endif
 
 // in MQTTConfig
 extern bool debugMode;

@@ -20,6 +20,9 @@
 #include <Arduino.h>
 #include <RedGlobals.h>
 
+// Global temperature variables
+float currentTemp = -100.0;
+float currentOutdoorTemp = -100.0;
 
 //for LED status
 Ticker ticker;
@@ -72,8 +75,8 @@ void setup() {
 
 
 
-  doorBellButton.begin();
-  doorBellButton.onPressed(doorBellButtonPressed);
+  //doorBellButton.begin();
+  //doorBellButton.onPressed(doorBellButtonPressed);
   
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
@@ -92,11 +95,14 @@ void setup() {
   console.println(WiFi.localIP().toString());
 
   // configure MQTT topics & connect
-  configureMQTT();
+  //configureMQTT();
 
 
   // configure temp sensor
   configSensors(_TEMP_SENSOR_PERIOD, &updateTemperature);
+
+  // start web server
+  startWebServer();
 
 }
 
@@ -114,9 +120,11 @@ void loop() {
 
   serviceSensors(); // service temperature and other sensos
 
-  doorBellButton.read(); // service the buttons
+  //doorBellButton.read(); // service the buttons
 
-  checkMQTTConnection();  // check MQTT
+  //checkMQTTConnection();  // check MQTT
+
+  handleWebServer(); // handle web server requests
 
   handleConsole(); // handle any commands from console
 
@@ -165,6 +173,10 @@ void checkDoorBellButton()
 */
 void updateTemperature(float temp, float outdoorTemp)
 {
+  // Update global temperature variables for web server
+  currentTemp = temp;
+  currentOutdoorTemp = outdoorTemp;
+
   char str[128];
   console.println("Reporting temp reading (in/out) of " + String(temp) + " and " + String(outdoorTemp));
   if (temp > -100)

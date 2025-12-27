@@ -14,6 +14,15 @@ as well as inside and outside temperature reporting
 ## Version 1.3
   **curently deployed** Migrated to JSON6
 
+## Version 1.3
+  released version
+
+## Version 1.5
+  standalone version that does not use MQTT and deploys a webserver to control the garage
+  For security reasons, This also uses 'fady khairallah' as a password for the AP hotspot 
+  if the main WIFI fails.
+
+
 
 # Hardware Notes
 

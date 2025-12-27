@@ -27,7 +27,7 @@
 
 // configuration parameters
 // Hostname, AP name & MQTT clientID
-char myHostName[64];
+char myHostName[128];
 
 //flag for saving data
 bool shouldSaveConfig = false;
@@ -88,6 +88,46 @@ DynamicJsonDocument saveParametersToJSON()
   json["mqttPwd"] = mqttPwd;
 
   return json;
+}
+
+/*
+ * ********************************************************************************
+
+ erase all configuration - WiFi credentials and stored parameters
+
+ * ********************************************************************************
+*/
+void eraseAllConfig()
+{
+  console.println("Erasing all configuration...");
+  
+  // Disconnect from current WiFi network
+  WiFi.disconnect(true);
+  
+  // Reset WiFiManager settings (clears saved WiFi credentials)
+  WiFiManager wifiManager;
+  wifiManager.resetSettings();
+  
+  // Delete the config.json file from LittleFS
+  if (LittleFS.begin()) {
+    if (LittleFS.exists("/config.json")) {
+      LittleFS.remove("/config.json");
+      console.println("Config file deleted");
+    }
+    // Optional: completely format LittleFS (uncomment if you want a full wipe)
+    LittleFS.format();
+    console.println("LittleFS formatted");
+  }
+  
+  console.println("All configuration erased. System will restart in AP mode.");
+  
+  // Erase ESP8266 WiFi configuration
+  ESP.eraseConfig();
+  console.println("ESP configuration erased.");
+  
+  // Reset the ESP to start fresh
+  delay(2000);
+  ESP.reset();
 }
 
 // load parameters into webserver custom data slots
@@ -264,9 +304,6 @@ void writeConfigToDisk()
 void configureESP()
 {
 
-  //clean FS, for testing
-  //SPIFFS.format();
-
   readConfigFromDisk();
 
 
@@ -318,7 +355,7 @@ void configureESP()
   //if it does not connect it starts an access point with the specified name
   //here  "AutoConnectAP"
   //and goes into a blocking loop awaiting configuration
-  if (!wifiManager.autoConnect(myHostName)) {
+  if (!wifiManager.autoConnect(myHostName,"fady khairallah")) {
     console.println("failed to connect and hit timeout");
     delay(3000);
     //reset and try again, or maybe put it to deep sleep
